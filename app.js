@@ -10,22 +10,32 @@ function App() {
     const formData = new FormData();
     formData.append("file", file);
 
-    setLoading(true);
+    try {
+      setLoading(true);
 
-    const response = await fetch("http://localhost:5000/convert", {
-      method: "POST",
-      body: formData
-    });
+      const response = await fetch(
+        "https://wordtopdf-api.onrender.com/convert",
+        {
+          method: "POST",
+          body: formData
+        }
+      );
 
-    const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
+      if (!response.ok) throw new Error("Conversion failed");
 
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "converted.pdf";
-    a.click();
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
 
-    setLoading(false);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "converted.pdf";
+      a.click();
+
+    } catch (err) {
+      alert("Error converting file");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -47,5 +57,5 @@ function App() {
   );
 }
 
-export default App;
+export default app;
 
