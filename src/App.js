@@ -13,7 +13,7 @@ function App() {
     try {
       setLoading(true);
 
-      const response = await fetch("https://codewp.onrender.com/convert", {
+      const response = await fetch("https://codewp-1.onrender.com/convert", {
         method: "POST",
         body: formData,
       });
