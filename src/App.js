@@ -13,16 +13,29 @@ function App() {
     try {
       setLoading(true);
 
-      const response = await fetch(
-        "https://codewp.onrender.com/convert",
-        {
-          method: "POST",
-          body: formData
-        }
-      );
+      const response = await fetch("https://codewp.onrender.com/convert", {
+        method: "POST",
+        body: formData,
+      });
 
-      if (!response.ok) throw new Error("Conversion failed");
+      // Show backend error message (instead of generic alert)
+      if (!response.ok) {
+        const errText = await response.text().catch(() => "");
+        throw new Error(
+          `HTTP ${response.status}: ${errText || "Conversion failed"}`
+        );
+      }
 
+      // Ensure the response is actually a PDF
+      const contentType = response.headers.get("content-type") || "";
+      if (!contentType.includes("application/pdf")) {
+        const errText = await response.text().catch(() => "");
+        throw new Error(
+          `Expected PDF but got "${contentType}". ${errText || ""}`
+        );
+      }
+
+      // Download PDF
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
 
@@ -31,8 +44,10 @@ function App() {
       a.download = "converted.pdf";
       a.click();
 
+      window.URL.revokeObjectURL(url);
     } catch (err) {
-      alert("Error converting file");
+      console.error("Convert error:", err);
+      alert(err.message || "Error converting file");
     } finally {
       setLoading(false);
     }
@@ -45,14 +60,20 @@ function App() {
       <input
         type="file"
         accept=".doc,.docx"
-        onChange={(e) => setFile(e.target.files[0])}
+        onChange={(e) => setFile(e.target.files?.[0] || null)}
+        disabled={loading}
       />
 
-      <br /><br />
+      <br />
+      <br />
 
-      <button onClick={handleUpload}>
+      <button onClick={handleUpload} disabled={!file || loading}>
         {loading ? "Converting..." : "Convert to PDF"}
       </button>
+
+      <p style={{ marginTop: 16, fontSize: 12, opacity: 0.8 }}>
+        Backend: https://codewp.onrender.com/convert
+      </p>
     </div>
   );
 }
